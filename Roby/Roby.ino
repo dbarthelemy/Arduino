@@ -1,3 +1,5 @@
+#include <NewPing.h>
+
 const int controlLeftMotorEN2 = 2;
 const int controlLeftMotorEN1 = 3;
 const int enableLeftMotor = 9;
@@ -12,10 +14,15 @@ int rightMotorEnabled = 0;
 int rightMotorSpeed = 0;
 int rightMotorDirection = 0;
 int duration = 0;
+int testState = 0;
 
 #define kMaxSpeed 255
-#define kMedSpeed 200
-int testState = 0;
+#define kMedSpeed 180
+#define TRIGGER_PIN  12
+#define ECHO_PIN     11
+#define MAX_DISTANCE 200
+ 
+NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
 
 void setup() {
   pinMode(controlLeftMotorEN1, OUTPUT);
@@ -30,80 +37,84 @@ void setup() {
 }
 
 void loop() {
-  /*
-   *  Motor testing
-   */
-  switch(testState) {
-    case 0:
-      stop();
-      duration = 1;
-      testState = 1;
-      break;
-    case 1:
-      turnLeft();
-      duration = 4;
-      testState = 2;
-      break;
-    case 2:
-      stop();
-      duration = 1;
-      testState = 3;
-      break;
-    case 3:
-      turnRight();
-      duration = 4;
-      testState = 4;
-      break;
-    case 4:
-      stop();
-      duration = 1;
-      testState = 5;
-      break;
-    case 5:
-      goForward();
-      duration = 4;
-      testState = 0;
-      break;
-    default:    
-      testState = 0;
-  }
+  if (duration == 0) {
+    /*
+     *  Motor testing
+     */
+    switch(testState) {
+      case 0:
+        stop();
+        duration = 500;
+        testState = 1;
+        break;
+      case 1:
+        turnLeft();
+        duration = 1000;
+        testState = 2;
+        break;
+      case 2:
+        stop();
+        duration = 500;
+        testState = 3;
+        break;
+      case 3:
+        goForward();
+        duration = 5000;
+        testState = 0;
+        break;
+      default:    
+        testState = 0;
+    }
+    
+    /*
+     *  Motor control
+     */
+    if(leftMotorDirection == 0) {
+      digitalWrite(controlLeftMotorEN1, HIGH);
+      digitalWrite(controlLeftMotorEN2, LOW);
+    }
+    else {
+      digitalWrite(controlLeftMotorEN1, LOW);
+      digitalWrite(controlLeftMotorEN2, HIGH);
+    }
+    
+    if(leftMotorEnabled == 1) {
+      analogWrite(enableLeftMotor, leftMotorSpeed);
+    }
+    else {
+      analogWrite(enableLeftMotor, 0);
+    }
   
-  /*
-   *  Motor control
-   */
-  if(leftMotorDirection == 0) {
-    digitalWrite(controlLeftMotorEN1, HIGH);
-    digitalWrite(controlLeftMotorEN2, LOW);
+    if(rightMotorDirection == 0) {
+      digitalWrite(controlRightMotorEN3, HIGH);
+      digitalWrite(controlRightMotorEN4, LOW);
+    }
+    else {
+      digitalWrite(controlRightMotorEN3, LOW);
+      digitalWrite(controlRightMotorEN4, HIGH);
+    }
+    
+    if(rightMotorEnabled == 1) {
+      analogWrite(enableRightMotor, rightMotorSpeed);
+    }
+    else {
+      analogWrite(enableRightMotor, 0);
+    }
+  }
+  else if (testState == 0) {
+    // Check if any object is detected
+    int distance = sonar.ping_cm();
+    if (distance <= 40) {
+      duration = 0;
+    }
+    else {
+      duration -= 100;
+    }
   }
   else {
-    digitalWrite(controlLeftMotorEN1, LOW);
-    digitalWrite(controlLeftMotorEN2, HIGH);
+      duration -= 100;
   }
-  
-  if(leftMotorEnabled == 1) {
-    analogWrite(enableLeftMotor, leftMotorSpeed);
-  }
-  else {
-    analogWrite(enableLeftMotor, 0);
-  }
-
-  if(rightMotorDirection == 0) {
-    digitalWrite(controlRightMotorEN3, HIGH);
-    digitalWrite(controlRightMotorEN4, LOW);
-  }
-  else {
-    digitalWrite(controlRightMotorEN3, LOW);
-    digitalWrite(controlRightMotorEN4, HIGH);
-  }
-  
-  if(rightMotorEnabled == 1) {
-    analogWrite(enableRightMotor, rightMotorSpeed);
-  }
-  else {
-    analogWrite(enableRightMotor, 0);
-  }
-
-  delay(duration * 1000);
+  delay(100);
 }
 
 void stop() {

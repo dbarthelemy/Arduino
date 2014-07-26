@@ -11,9 +11,10 @@ int leftMotorDirection = 0;
 int rightMotorEnabled = 0;
 int rightMotorSpeed = 0;
 int rightMotorDirection = 0;
+int duration = 0;
 
-#define kTestSpeed 255
-#define kTestWait 5000
+#define kMaxSpeed 255
+#define kMedSpeed 200
 int testState = 0;
 
 void setup() {
@@ -34,43 +35,37 @@ void loop() {
    */
   switch(testState) {
     case 0:
-    leftMotorEnabled = 0;
-    leftMotorSpeed = 0;
-    leftMotorDirection = 1;
-    rightMotorEnabled = 0;
-    rightMotorSpeed = 0;
-    rightMotorDirection = 1;
-    testState = 1;
-    break;
+      stop();
+      duration = 1;
+      testState = 1;
+      break;
     case 1:
-    leftMotorEnabled = 1;
-    leftMotorSpeed = kTestSpeed;
-    leftMotorDirection = 1;
-    rightMotorEnabled = 1;
-    rightMotorSpeed = kTestSpeed;
-    rightMotorDirection = 0;
-    testState = 2;
-    break;
+      turnLeft();
+      duration = 4;
+      testState = 2;
+      break;
     case 2:
-    leftMotorEnabled = 1;
-    leftMotorSpeed = kTestSpeed;
-    leftMotorDirection = 0;
-    rightMotorEnabled = 1;
-    rightMotorSpeed = kTestSpeed;
-    rightMotorDirection = 1;
-    testState = 3;
-    break;
+      stop();
+      duration = 1;
+      testState = 3;
+      break;
     case 3:
-    leftMotorEnabled = 1;
-    leftMotorSpeed = kTestSpeed;
-    leftMotorDirection = 1;
-    rightMotorEnabled = 1;
-    rightMotorSpeed = kTestSpeed;
-    rightMotorDirection = 1;
-    testState = 0;
-    break;
+      turnRight();
+      duration = 4;
+      testState = 4;
+      break;
+    case 4:
+      stop();
+      duration = 1;
+      testState = 5;
+      break;
+    case 5:
+      goForward();
+      duration = 4;
+      testState = 0;
+      break;
     default:    
-    testState = 0;
+      testState = 0;
   }
   
   /*
@@ -108,6 +103,42 @@ void loop() {
     analogWrite(enableRightMotor, 0);
   }
 
-  delay(kTestWait);
+  delay(duration * 1000);
+}
+
+void stop() {
+  leftMotorEnabled = 0;
+  leftMotorSpeed = 0;
+  leftMotorDirection = 1;
+  rightMotorEnabled = 0;
+  rightMotorSpeed = 0;
+  rightMotorDirection = 1;  
+}
+
+void turnLeft() {
+  leftMotorEnabled = 1;
+  leftMotorSpeed = kMedSpeed;
+  leftMotorDirection = 1;
+  rightMotorEnabled = 1;
+  rightMotorSpeed = kMedSpeed;
+  rightMotorDirection = 0;
+}
+
+void turnRight() {
+  leftMotorEnabled = 1;
+  leftMotorSpeed = kMedSpeed;
+  leftMotorDirection = 0;
+  rightMotorEnabled = 1;
+  rightMotorSpeed = kMedSpeed;
+  rightMotorDirection = 1;
+}
+
+void goForward() {
+  leftMotorEnabled = 1;
+  leftMotorSpeed = kMaxSpeed;
+  leftMotorDirection = 1;
+  rightMotorEnabled = 1;
+  rightMotorSpeed = kMaxSpeed;
+  rightMotorDirection = 1;
 }
 

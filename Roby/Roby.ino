@@ -48,8 +48,8 @@ void loop() {
         testState = 1;
         break;
       case 1:
-        turnLeft();
-        duration = 1000;
+        turnRight();
+        duration = 800;
         testState = 2;
         break;
       case 2:
@@ -126,7 +126,7 @@ void stop() {
   rightMotorDirection = 1;  
 }
 
-void turnLeft() {
+void turnRight() {
   leftMotorEnabled = 1;
   leftMotorSpeed = kMedSpeed;
   leftMotorDirection = 1;
@@ -135,7 +135,7 @@ void turnLeft() {
   rightMotorDirection = 0;
 }
 
-void turnRight() {
+void turnLeft() {
   leftMotorEnabled = 1;
   leftMotorSpeed = kMedSpeed;
   leftMotorDirection = 0;

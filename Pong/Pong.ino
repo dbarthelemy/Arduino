@@ -33,10 +33,10 @@
 #define SCORE_Y 4
  
 #define MAX_Y_VELOCITY 6
-#define PLAY_TO 7
+#define PLAY_TO 3
  
-#define LEFT 0
-#define RIGHT 1
+#define LEFT_PLAYER 0
+#define RIGHT_PLAYER 1
  
 TVout TV;
 unsigned char x,y;
@@ -67,7 +67,7 @@ void processInputs() {
    button1Status = (digitalRead(BUTTON_ONE_PIN));
   
  //  button2Status = (digitalRead(BUTTON_TWO_PIN) == LOW);
-   if ((button1Status == 0)&& (state == GAME_OVER))
+   if ((button1Status == LOW) && (state == GAME_OVER))
    {
      Serial.println("game over, drawing menu");
      drawMenu ();
@@ -113,10 +113,10 @@ void drawGameScreen() {
   TV.set_pixel(ballX, ballY, 2);
 }
  
-//player == LEFT or RIGHT
+//player == LEFT_PLAYER or RIGHT_PLAYER
 void playerScored(byte player) {
-  if(player == LEFT) leftPlayerScore++;
-  if(player == RIGHT) rightPlayerScore++;
+  if(player == LEFT_PLAYER) leftPlayerScore++;
+  if(player == RIGHT_PLAYER) rightPlayerScore++;
  
   //check for win
   if(leftPlayerScore == PLAY_TO || rightPlayerScore == PLAY_TO) {
@@ -198,12 +198,12 @@ void setup()  {
     //Serial.begin(9600);
   x=0;
   y=0;
-  TV.begin(_NTSC);       //for devices with only 1k sram(m168) use TV.begin(_NTSC,128,56)
+  TV.begin(PAL);       //for devices with only 1k sram(m168) use TV.begin(_NTSC,128,56)
  
   ballX = TV.hres() / 2;
   ballY = TV.vres() / 2;
  
-//  pinMode(BUTTON_ONE_PIN, INPUT);      // sets the digital pin as output
+  pinMode(BUTTON_ONE_PIN, INPUT);      // sets the digital pin as input
 }
  
 void loop() {
@@ -256,13 +256,13 @@ void loop() {
   
  // Scoring
       if(ballX <= 1) {
-        playerScored(RIGHT);
+        playerScored(RIGHT_PLAYER);
      // sound 
      delay(100);
   TV.tone( 500,300 );   
       }
       if(ballX >= TV.hres() - 1) {
-        playerScored(LEFT);
+        playerScored(LEFT_PLAYER);
         // sound 
         delay(100);
  TV.tone(  500,300 );
@@ -293,5 +293,5 @@ void loop() {
  
  
   TV.delay_frame(1);
-  if(++frame == 60) frame = 0; //increment and/or reset frame counter
+  if(++frame == 50) frame = 0; //increment and/or reset frame counter
 }

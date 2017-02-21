@@ -3,10 +3,10 @@
  * By Pete Lamonica
  *  modified by duboisvb
  *  updated by James Bruce (http://www.makeuseof.com/tag/author/jbruce
+ *  updated by David Barthelemy
  * A simple implementation of Pong on the Arduino using a TV for output.
  *
  */
- 
  
 #include <TVout.h>
 #include <fontALL.h>
@@ -14,7 +14,7 @@
 #define WHEEL_ONE_PIN 0 //analog
 #define WHEEL_TWO_PIN 1 //analog
 #define BUTTON_ONE_PIN 2 //digital to start game
-// #define BUTTON_TWO_PIN 3 //digital to reset and go back to main menu
+//#define BUTTON_TWO_PIN 3 //digital to reset and go back to main menu
  
 #define PADDLE_HEIGHT 14
 #define PADDLE_WIDTH 1
@@ -42,7 +42,7 @@ TVout TV;
 unsigned char x,y;
 
 boolean button1Status = false;
-// boolean button2Status = false;
+//boolean button2Status = false;
 
 int wheelOnePosition = 0;
 int wheelTwoPosition = 0;
@@ -61,53 +61,45 @@ int state = IN_MENU;
  
 void processInputs() {
   wheelOnePosition = analogRead(WHEEL_ONE_PIN);
-  // delay(50);
+// delay(50);
   wheelTwoPosition = analogRead(WHEEL_TWO_PIN);
- // delay(50);
-   button1Status = (digitalRead(BUTTON_ONE_PIN));
+// delay(50);
+  button1Status = (digitalRead(BUTTON_ONE_PIN));
   
- //  button2Status = (digitalRead(BUTTON_TWO_PIN) == LOW);
-   if ((button1Status == LOW) && (state == GAME_OVER))
-   {
-     Serial.println("game over, drawing menu");
-     drawMenu ();
-   }
+//  button2Status = (digitalRead(BUTTON_TWO_PIN) == LOW);
+  if ((button1Status == LOW) && (state == GAME_OVER))
+  {
+    Serial.println("game over, drawing menu");
+    drawMenu ();
+  }
   
- 
-   delay(50);
+  delay(50);
   //Serial.println(button1Status);
   //Serial.println(state);
   //Serial.println(button2Status);
   //Serial.println(wheelOnePosition);
-   //Serial.println(wheelTwoPosition);
- 
-
+  //Serial.println(wheelTwoPosition);
 }
- 
+
 void drawGameScreen() {
- //  TV.clear_screen();
+//  TV.clear_screen();
   //draw right paddle
   rightPaddleY = ((wheelOnePosition /8) * (TV.vres()-PADDLE_HEIGHT))/ 128;
   x = RIGHT_PADDLE_X;
   for(int i=0; i<PADDLE_WIDTH; i++) {
-    TV.draw_line(x+i,rightPaddleY,x+i,rightPaddleY+PADDLE_HEIGHT,1);
+    TV.draw_line(x+i, rightPaddleY, x+i, rightPaddleY+PADDLE_HEIGHT, 1);
   }
  
   //draw left paddle
   leftPaddleY = ((wheelTwoPosition /8) * (TV.vres()-PADDLE_HEIGHT))/ 128;
   x = LEFT_PADDLE_X;
   for(int i=0; i<PADDLE_WIDTH; i++) {
-    TV.draw_line(x+i,leftPaddleY,x+i,leftPaddleY+PADDLE_HEIGHT,1);
+    TV.draw_line(x+i, leftPaddleY, x+i, leftPaddleY+PADDLE_HEIGHT, 1);
   }
  
   //draw score
-  TV.print_char(LEFT_SCORE_X,SCORE_Y,'0'+leftPlayerScore);
-  TV.print_char(RIGHT_SCORE_X,SCORE_Y,'0'+rightPlayerScore);
- 
-  
-  
- 
- 
+  TV.print_char(LEFT_SCORE_X, SCORE_Y, '0'+leftPlayerScore);
+  TV.print_char(RIGHT_SCORE_X, SCORE_Y, '0'+rightPlayerScore);
   
   //draw ball
   TV.set_pixel(ballX, ballY, 2);
@@ -126,30 +118,27 @@ void playerScored(byte player) {
   ballVolX = -ballVolX;
 }
  
- 
- 
- void drawBox() {
-      TV.clear_screen();
+void drawBox() {
+  TV.clear_screen();
       
-   //draw net
+  //draw net
   for(int i=1; i<TV.vres() - 4; i+=6) {
-    TV.draw_line(TV.hres()/2,i,TV.hres()/2,i+3,1);
+    TV.draw_line(TV.hres()/2, i, TV.hres()/2, i+3, 1);
   }
+  
   // had to make box a bit smaller to fit tv 
-    TV.draw_line(0, 0, 0,95,1 );  // left
-   TV.draw_line(0, 0, 126,0,1 ); // top
-    TV.draw_line(126, 0, 126,95,1 ); // right
-     TV.draw_line(0, 95, 126,95,1 ); // bottom
-  
-  
+  TV.draw_line(0, 0, 0, 95, 1);  // left
+  TV.draw_line(0, 0, 126,0, 1); // top
+  TV.draw_line(126, 0, 126, 95, 1); // right
+  TV.draw_line(0, 95, 126, 95, 1); // bottom
+
   state = IN_GAMEB;
 }
- 
  
 void drawMenu() {
   x = 0;
   y = 0;
-  char volX =3;
+  char volX = 3;
   char volY = 3;
   TV.clear_screen();
   TV.select_font(font8x8);
@@ -158,11 +147,10 @@ void drawMenu() {
   TV.print(22, 35, "Press Button");
   TV.print(30, 45, "To Start");
   
-  
   delay(1000);
   while(!button1Status) {
     Serial.println("menu");
-  Serial.println(button1Status);
+    Serial.println(button1Status);
   
     processInputs();
     TV.delay_frame(3);
@@ -188,14 +176,12 @@ void drawMenu() {
     TV.set_pixel(x, y, 1);
   }
  
- 
- 
   TV.select_font(font4x6);
   state = IN_GAMEA;
 }
  
 void setup()  {
-    //Serial.begin(9600);
+//  Serial.begin(9600);
   x=0;
   y=0;
   TV.begin(PAL);       //for devices with only 1k sram(m168) use TV.begin(_NTSC,128,56)
@@ -208,17 +194,13 @@ void setup()  {
  
 void loop() {
   processInputs();
- 
 
- 
- 
   if(state == IN_MENU) {
     drawMenu();
   }
- if(state == IN_GAMEA) {
-    //Serial.println("gamA");
-  //Serial.println(button1Status);
-  
+  if(state == IN_GAMEA) {
+//  Serial.println("gamA");
+//  Serial.println(button1Status);
     drawBox();
   }
  
@@ -227,48 +209,47 @@ void loop() {
       ballX += ballVolX;
       ballY += ballVolY;
  
- // change if hit top or bottom
-      if(ballY <= 1 || ballY >= TV.vres()-1)
-     { ballVolY = -ballVolY;
-                 delay(100);
-  TV.tone( 2000,30  );   
-     }
+      // change if hit top or bottom
+      if(ballY <= 1 || ballY >= TV.vres()-1) {
+        ballVolY = -ballVolY;
+        delay(100);
+        TV.tone(2000, 30);   
+      }
       
-  // test left side for wall hit    
+      // test left side for wall hit    
       if(ballVolX < 0 && ballX == LEFT_PADDLE_X+PADDLE_WIDTH-1 && ballY >= leftPaddleY && ballY <= leftPaddleY + PADDLE_HEIGHT) {
         ballVolX = -ballVolX;
         ballVolY += 2 * ((ballY - leftPaddleY) - (PADDLE_HEIGHT / 2)) / (PADDLE_HEIGHT / 2);
-            delay(100);
-  TV.tone(2000,30 );   
+        delay(100);
+        TV.tone(2000, 30);   
       }
       
- // test right side for wall hit     
+      // test right side for wall hit     
       if(ballVolX > 0 && ballX == RIGHT_PADDLE_X && ballY >= rightPaddleY && ballY <= rightPaddleY + PADDLE_HEIGHT) {
         ballVolX = -ballVolX;
         ballVolY += 2 * ((ballY - rightPaddleY) - (PADDLE_HEIGHT / 2)) / (PADDLE_HEIGHT / 2);
-            delay(100);
-  TV.tone( 2000,30  );   
+        delay(100);
+        TV.tone(2000, 30);   
       }
  
       //limit vertical speed
       if(ballVolY > MAX_Y_VELOCITY) ballVolY = MAX_Y_VELOCITY;
       if(ballVolY < -MAX_Y_VELOCITY) ballVolY = -MAX_Y_VELOCITY;
   
- // Scoring
+      // Scoring
       if(ballX <= 1) {
         playerScored(RIGHT_PLAYER);
-     // sound 
-     delay(100);
-  TV.tone( 500,300 );   
+        // sound 
+        delay(100);
+        TV.tone(500, 300);   
       }
       if(ballX >= TV.hres() - 1) {
         playerScored(LEFT_PLAYER);
         // sound 
         delay(100);
- TV.tone(  500,300 );
+        TV.tone(500, 300);
       }
     }
-   
    
 //    if(button1Status) Serial.println((int)ballVolX);
  
@@ -278,8 +259,8 @@ void loop() {
   if(state == GAME_OVER) {
     drawGameScreen();
     TV.select_font(font8x8);
-    TV.print(29,25,"GAME");
-    TV.print(68,25,"OVER");
+    TV.print(29, 25, "GAME");
+    TV.print(68, 25, "OVER");
     while(!button1Status) {
       processInputs();
       delay(50);
@@ -290,7 +271,6 @@ void loop() {
     rightPlayerScore = 0;
     state = IN_MENU;
   }
- 
  
   TV.delay_frame(1);
   if(++frame == 50) frame = 0; //increment and/or reset frame counter

@@ -34,6 +34,8 @@
  
 #define MAX_Y_VELOCITY 6
 #define PLAY_TO 3
+#define MAX_FRAME_SKIP 3
+#define MAX_HIT 4
  
 #define LEFT_PLAYER 0
 #define RIGHT_PLAYER 1
@@ -41,8 +43,8 @@
 TVout TV;
 unsigned char x,y;
 
-boolean button1Status = false;
-//boolean button2Status = false;
+boolean button1Status = LOW;
+//boolean button2Status = LOW;
 
 int wheelOnePosition = 0;
 int wheelTwoPosition = 0;
@@ -57,6 +59,8 @@ int leftPlayerScore = 0;
 int rightPlayerScore = 0;
  
 int frame = 0;
+int frameSkip = MAX_FRAME_SKIP;
+int hitCount = 0;
 int state = IN_MENU;
  
 void processInputs() {
@@ -86,14 +90,14 @@ void drawGameScreen() {
   //draw right paddle
   rightPaddleY = ((wheelOnePosition /8) * (TV.vres()-PADDLE_HEIGHT))/ 128;
   x = RIGHT_PADDLE_X;
-  for(int i=0; i<PADDLE_WIDTH; i++) {
+  for (int i=0; i<PADDLE_WIDTH; i++) {
     TV.draw_line(x+i, rightPaddleY, x+i, rightPaddleY+PADDLE_HEIGHT, 1);
   }
  
   //draw left paddle
   leftPaddleY = ((wheelTwoPosition /8) * (TV.vres()-PADDLE_HEIGHT))/ 128;
   x = LEFT_PADDLE_X;
-  for(int i=0; i<PADDLE_WIDTH; i++) {
+  for (int i=0; i<PADDLE_WIDTH; i++) {
     TV.draw_line(x+i, leftPaddleY, x+i, leftPaddleY+PADDLE_HEIGHT, 1);
   }
  
@@ -107,11 +111,11 @@ void drawGameScreen() {
  
 //player == LEFT_PLAYER or RIGHT_PLAYER
 void playerScored(byte player) {
-  if(player == LEFT_PLAYER) leftPlayerScore++;
-  if(player == RIGHT_PLAYER) rightPlayerScore++;
+  if (player == LEFT_PLAYER) leftPlayerScore++;
+  if (player == RIGHT_PLAYER) rightPlayerScore++;
  
   //check for win
-  if(leftPlayerScore == PLAY_TO || rightPlayerScore == PLAY_TO) {
+  if (leftPlayerScore == PLAY_TO || rightPlayerScore == PLAY_TO) {
     state = GAME_OVER;
   }
  
@@ -148,21 +152,21 @@ void drawMenu() {
   TV.print(30, 45, "To Start");
   
   delay(1000);
-  while(!button1Status) {
+  while(button1Status == LOW) {
     Serial.println("menu");
     Serial.println(button1Status);
   
     processInputs();
     TV.delay_frame(3);
-    if(x + volX < 1 || x + volX > TV.hres() - 1) volX = -volX;
-    if(y + volY < 1 || y + volY > TV.vres() - 1) volY = -volY;
-    if(TV.get_pixel(x + volX, y + volY)) {
+    if (x + volX < 1 || x + volX > TV.hres() - 1) volX = -volX;
+    if (y + volY < 1 || y + volY > TV.vres() - 1) volY = -volY;
+    if (TV.get_pixel(x + volX, y + volY)) {
       TV.set_pixel(x + volX, y + volY, 0);
     
-      if(TV.get_pixel(x + volX, y - volY) == 0) {
+      if (TV.get_pixel(x + volX, y - volY) == 0) {
         volY = -volY;
       }
-      else if(TV.get_pixel(x - volX, y + volY) == 0) {
+      else if (TV.get_pixel(x - volX, y + volY) == 0) {
         volX = -volX;
       }
       else {
@@ -195,56 +199,69 @@ void setup()  {
 void loop() {
   processInputs();
 
-  if(state == IN_MENU) {
+  if (state == IN_MENU) {
     drawMenu();
   }
-  if(state == IN_GAMEA) {
+  if (state == IN_GAMEA) {
 //  Serial.println("gamA");
 //  Serial.println(button1Status);
     drawBox();
   }
  
-  if(state == IN_GAMEB) {
-    if(frame % 3 == 0) { //every third frame
+  if (state == IN_GAMEB) {
+    if (frame % frameSkip == 0) { //every frameSkip
       ballX += ballVolX;
       ballY += ballVolY;
  
       // change if hit top or bottom
-      if(ballY <= 1 || ballY >= TV.vres()-1) {
+      if (ballY <= 1 || ballY >= TV.vres()-1) {
         ballVolY = -ballVolY;
+        hitCount++;
         delay(100);
         TV.tone(2000, 30);   
       }
       
       // test left side for wall hit    
-      if(ballVolX < 0 && ballX == LEFT_PADDLE_X+PADDLE_WIDTH-1 && ballY >= leftPaddleY && ballY <= leftPaddleY + PADDLE_HEIGHT) {
+      if (ballVolX < 0 && ballX == LEFT_PADDLE_X+PADDLE_WIDTH-1 && ballY >= leftPaddleY && ballY <= leftPaddleY + PADDLE_HEIGHT) {
         ballVolX = -ballVolX;
         ballVolY += 2 * ((ballY - leftPaddleY) - (PADDLE_HEIGHT / 2)) / (PADDLE_HEIGHT / 2);
+        hitCount++;
         delay(100);
         TV.tone(2000, 30);   
       }
       
       // test right side for wall hit     
-      if(ballVolX > 0 && ballX == RIGHT_PADDLE_X && ballY >= rightPaddleY && ballY <= rightPaddleY + PADDLE_HEIGHT) {
+      if (ballVolX > 0 && ballX == RIGHT_PADDLE_X && ballY >= rightPaddleY && ballY <= rightPaddleY + PADDLE_HEIGHT) {
         ballVolX = -ballVolX;
         ballVolY += 2 * ((ballY - rightPaddleY) - (PADDLE_HEIGHT / 2)) / (PADDLE_HEIGHT / 2);
+        hitCount++;
         delay(100);
         TV.tone(2000, 30);   
       }
  
       //limit vertical speed
-      if(ballVolY > MAX_Y_VELOCITY) ballVolY = MAX_Y_VELOCITY;
-      if(ballVolY < -MAX_Y_VELOCITY) ballVolY = -MAX_Y_VELOCITY;
+      if (ballVolY > MAX_Y_VELOCITY) {
+        ballVolY = MAX_Y_VELOCITY;
+        if (frameSkip > 1) frameSkip--;
+      }
+      if (ballVolY < -MAX_Y_VELOCITY) {
+        ballVolY = -MAX_Y_VELOCITY;
+        if (frameSkip > 1) frameSkip--;
+      }
   
       // Scoring
-      if(ballX <= 1) {
+      if (ballX <= 1) {
         playerScored(RIGHT_PLAYER);
+        frameSkip = MAX_FRAME_SKIP;
+        hitCount = 0;
         // sound 
         delay(100);
-        TV.tone(500, 300);   
+        TV.tone(500, 300);
       }
-      if(ballX >= TV.hres() - 1) {
+      if (ballX >= TV.hres() - 1) {
         playerScored(LEFT_PLAYER);
+        frameSkip = MAX_FRAME_SKIP;
+        hitCount = 0;
         // sound 
         delay(100);
         TV.tone(500, 300);
@@ -256,12 +273,12 @@ void loop() {
     drawGameScreen();
   }
   
-  if(state == GAME_OVER) {
+  if (state == GAME_OVER) {
     drawGameScreen();
     TV.select_font(font8x8);
     TV.print(29, 25, "GAME");
     TV.print(68, 25, "OVER");
-    while(!button1Status) {
+    while (button1Status == LOW) {
       processInputs();
       delay(50);
     }
@@ -271,7 +288,12 @@ void loop() {
     rightPlayerScore = 0;
     state = IN_MENU;
   }
- 
+
+  if (hitCount >= MAX_HIT) {
+    hitCount = 0;
+    if (frameSkip > 1) frameSkip--;
+  }
+  
   TV.delay_frame(1);
-  if(++frame == 50) frame = 0; //increment and/or reset frame counter
+  if (++frame == 60) frame = 0; //increment and/or reset frame counter
 }
